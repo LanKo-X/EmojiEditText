@@ -1,13 +1,17 @@
 package com.lanko.emojiedittext;
 
 import android.content.Context;
-import android.util.Log;
+import android.graphics.drawable.Drawable;
+import android.support.v4.util.ArrayMap;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
+import android.text.style.ImageSpan;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashMap;
+import java.io.InputStream;
 import java.util.Iterator;
-import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Created by Lex Luther on 8/13/15.
@@ -16,10 +20,12 @@ public class EmojiRule {
 
     private static EmojiRule instance;
 
+    private Context context;
+
     /**
      * emojiMap< Emoji字符串, 表情文件路径 >
      */
-    private Map<String, String> emojiMap;
+    private ArrayMap<String, String> emojiMap;
     private String regExp;
 
     public static EmojiRule getInstance(Context context) {
@@ -34,12 +40,14 @@ public class EmojiRule {
 
     private EmojiRule(Context context) {
 
+        this.context = context;
+
         /**
          * 初始化 emojiMap
          * 此处代码对表情文件命名要求非常严格
-         * 表情文件命名格式为：emoji_0x[十六进制 Unicode].png
+         * 表情文件命名格式为：[十六进制 Unicode].png
          */
-        emojiMap = new HashMap<>();
+        emojiMap = new ArrayMap<>();
 
         /**
          * 将表情文件放在 assets 中的目录中，
@@ -49,19 +57,19 @@ public class EmojiRule {
         String folderName = "emoji";
         String[] files = {};
         try {
-            files = context.getAssets().list(folderName);
+            files = this.context.getAssets().list(folderName);
         } catch (IOException e) {
             e.printStackTrace();
         }
         for (String file : files) {
-            int unicode = Integer.parseInt(file.split("[x.]")[1], 16);
+            int unicode = Integer.parseInt(file.split("[.]")[0], 16);
             emojiMap.put(new String(Character.toChars(unicode)), folderName + "/" + file);
         }
 
     }
 
-    public Map<String, String> getEmojiMap() {
-        return emojiMap == null ? new HashMap<String, String>() : emojiMap;
+    public ArrayMap<String, String> getEmojiMap() {
+        return emojiMap == null ? new ArrayMap<String, String>() : emojiMap;
     }
 
     public String getRegExp() {
@@ -76,5 +84,40 @@ public class EmojiRule {
         }
 
         return regExp;
+    }
+
+    public boolean hasEmoji(CharSequence text) {
+        Pattern pattern = Pattern.compile(this.getRegExp(), Pattern.UNICODE_CASE | Pattern.CASE_INSENSITIVE);
+        Matcher matcher = pattern.matcher(text);
+
+        return matcher.find();
+    }
+
+    public SpannableStringBuilder convertToSpannable(CharSequence text) {
+        SpannableStringBuilder builder = new SpannableStringBuilder(text);
+
+        Pattern pattern = Pattern.compile(this.getRegExp(), Pattern.UNICODE_CASE | Pattern.CASE_INSENSITIVE);
+        Matcher matcher = pattern.matcher(text);
+
+        while (matcher.find()) {
+            InputStream is = null;
+            String emoji = matcher.group();
+            try {
+                is = context.getAssets().open(getEmojiMap().get(emoji));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            Drawable drawable = Drawable.createFromStream(is, null);
+            // TODO: 这些数字应作为参数传入, 不同尺寸的屏幕中显示的大小也不一样, 之后应该用 dp 转换
+            drawable.setBounds(0, 0, 56, 56);
+
+            int start = matcher.start();
+            int end = matcher.end();
+            ImageSpan span = new ImageSpan(drawable, ImageSpan.ALIGN_BASELINE);
+            builder.setSpan(span, start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        }
+
+        return builder;
     }
 }

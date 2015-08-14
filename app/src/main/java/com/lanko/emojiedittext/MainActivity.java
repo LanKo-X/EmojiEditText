@@ -1,82 +1,63 @@
 package com.lanko.emojiedittext;
 
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.text.SpannableStringBuilder;
-import android.text.Spanned;
-import android.text.style.ImageSpan;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Arrays;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements TextView.OnEditorActionListener {
 
-    TextView displayText;
-    EditText emojiEditText;
+    TextView textView;
+    EmojiTextView emojiTextView;
+    EditText editText;
+    EmojiEditText emojiEditText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        displayText = (TextView) findViewById(R.id.display_text_view);
-        emojiEditText = (EditText) findViewById(R.id.emoji_edit_text);
+        textView = (TextView) findViewById(R.id.display_text_view);
+        emojiTextView = (EmojiTextView) findViewById(R.id.display_emoji_text_view);
+        editText = (EditText) findViewById(R.id.edit_text);
+        emojiEditText = (EmojiEditText) findViewById(R.id.emoji_edit_text);
 
-        emojiEditText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-            @Override
-            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                if (actionId == EditorInfo.IME_ACTION_DONE) {
-                    display(displayText, emojiEditText.getText().toString());
-                    checkEmoji(displayText);
-                }
-                return false;
-            }
-        });
+        display(textView, new String(Character.toChars(0x1f1e8)) +  new String(Character.toChars(0x1F1F3)));
+        display(emojiTextView, new String(Character.toChars(0x1f1e8)) +  new String(Character.toChars(0x1F1F3)));
+
+        editText.setOnEditorActionListener(this);
+        emojiEditText.setOnEditorActionListener(this);
+
     }
 
     private void display(TextView textView, String s) {
         textView.setText(s);
     }
 
-    private int checkEmoji(TextView textView) {
-        String s = textView.getText().toString();
-        SpannableStringBuilder spannableString = new SpannableStringBuilder(s);
+    private int checkEmoji(EditText editText) {
+        String s = editText.getText().toString();
 
         Log.d("Chars", Arrays.toString(s.toCharArray()));
 
-        EmojiRule rule = EmojiRule.getInstance(this);
-
-        Pattern pattern = Pattern.compile(rule.getRegExp(), Pattern.UNICODE_CASE | Pattern.CASE_INSENSITIVE);
-        Matcher matcher = pattern.matcher(s);
-
-        while (matcher.find()) {
-            InputStream is = null;
-            String emoji = matcher.group();
-            try {
-                is = getAssets().open(rule.getEmojiMap().get(emoji));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            Drawable drawable = Drawable.createFromStream(is, null);
-            drawable.setBounds(0, 0, 56, 56);
-
-            int start = matcher.start();
-            int end = matcher.end();
-            ImageSpan span = new ImageSpan(drawable, ImageSpan.ALIGN_BASELINE);
-            spannableString.setSpan(span, start, end, Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
-        }
-
-        textView.setText(spannableString);
+        editText.setText(EmojiRule.getInstance(this).convertToSpannable(s));
 
         return 0;
+    }
+
+    @Override
+    public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+        if (actionId == EditorInfo.IME_ACTION_DONE) {
+
+            textView.setText(v.getText().toString());
+            emojiTextView.setText(v.getText().toString());
+
+            checkEmoji((EditText)v);
+        }
+        return false;
     }
 }
