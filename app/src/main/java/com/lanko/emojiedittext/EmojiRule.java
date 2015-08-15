@@ -93,7 +93,7 @@ public class EmojiRule {
         return matcher.find();
     }
 
-    public SpannableStringBuilder convertToSpannable(CharSequence text) {
+    public SpannableStringBuilder convertToSpannable(CharSequence text, int lineHeight) {
         SpannableStringBuilder builder = new SpannableStringBuilder(text);
 
         Pattern pattern = Pattern.compile(this.getRegExp(), Pattern.UNICODE_CASE | Pattern.CASE_INSENSITIVE);
@@ -109,8 +109,8 @@ public class EmojiRule {
             }
 
             Drawable drawable = Drawable.createFromStream(is, null);
-            // TODO: 这些数字应作为参数传入, 不同尺寸的屏幕中显示的大小也不一样, 之后应该用 dp 转换
-            drawable.setBounds(0, 0, 56, 56);
+
+            drawable.setBounds(0, 0, lineHeight, lineHeight);
 
             int start = matcher.start();
             int end = matcher.end();

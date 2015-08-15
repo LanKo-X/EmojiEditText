@@ -32,7 +32,7 @@ public class EmojiTextView extends TextView {
         if (type == null) {
             type = BufferType.NORMAL;
         }
-        super.setText(EmojiRule.getInstance(getContext()).convertToSpannable(text), type);
+        super.setText(EmojiRule.getInstance(getContext()).convertToSpannable(text, getLineHeight()), type);
     }
 
 }

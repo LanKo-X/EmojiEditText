@@ -44,8 +44,6 @@ public class MainActivity extends AppCompatActivity implements TextView.OnEditor
 
         Log.d("Chars", Arrays.toString(s.toCharArray()));
 
-        editText.setText(EmojiRule.getInstance(this).convertToSpannable(s));
-
         return 0;
     }
 

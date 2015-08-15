@@ -33,7 +33,7 @@ public class EmojiEditText extends EditText {
                     @Override
                     public CharSequence filter(CharSequence source, int start, int end, Spanned dest, int dstart, int dend) {
                         if (EmojiRule.getInstance(getContext()).hasEmoji(source)) {
-                            return EmojiRule.getInstance(getContext()).convertToSpannable(source);
+                            return EmojiRule.getInstance(getContext()).convertToSpannable(source, getLineHeight());
                         }
                         return source;
                     }
@@ -47,7 +47,7 @@ public class EmojiEditText extends EditText {
         if (type == null) {
             type = BufferType.EDITABLE;
         }
-        super.setText(EmojiRule.getInstance(getContext()).convertToSpannable(text), type);
+        super.setText(EmojiRule.getInstance(getContext()).convertToSpannable(text, getLineHeight()), type);
     }
 
 }
