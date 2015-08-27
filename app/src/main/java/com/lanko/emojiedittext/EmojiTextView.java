@@ -29,9 +29,14 @@ public class EmojiTextView extends TextView {
 
     @Override
     public void setText(CharSequence text, BufferType type) {
+
+        if (text == null) {
+            text = "";
+        }
         if (type == null) {
             type = BufferType.NORMAL;
         }
+
         super.setText(EmojiRule.getInstance(getContext()).convertToSpannable(text, getLineHeight()), type);
     }
 

@@ -94,6 +94,11 @@ public class EmojiRule {
     }
 
     public SpannableStringBuilder convertToSpannable(CharSequence text, int lineHeight) {
+
+        if (text == null) {
+            text = "";
+        }
+
         SpannableStringBuilder builder = new SpannableStringBuilder(text);
 
         Pattern pattern = Pattern.compile(this.getRegExp(), Pattern.UNICODE_CASE | Pattern.CASE_INSENSITIVE);
